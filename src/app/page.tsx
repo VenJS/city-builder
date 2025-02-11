@@ -2,14 +2,18 @@
 import { FirstFloor, HouseFloor, Roof } from "./assets/assets";
 import { useEffect, useState } from "react";
 import { Trash } from "lucide-react";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface House {
   houseName: string;
   floors: number;
   color: string;
-} 
+}
 
 const colorOptions = [
   { name: "Orange", value: "#FFA500" },
@@ -18,9 +22,15 @@ const colorOptions = [
   { name: "Emerald", value: "#2ECC71" },
 ];
 
-const fetchWeather = async ({ queryKey }: { queryKey: [string, number, number] }) => {
+const fetchWeather = async ({
+  queryKey,
+}: {
+  queryKey: [string, number, number];
+}) => {
   const [, latitude, longitude] = queryKey;
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+  const response = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+  );
   if (!response.ok) {
     throw new Error("Failed to fetch weather data");
   }
@@ -28,7 +38,6 @@ const fetchWeather = async ({ queryKey }: { queryKey: [string, number, number] }
 };
 
 const queryClient = new QueryClient();
-
 
 export default function App() {
   return (
@@ -38,13 +47,17 @@ export default function App() {
   );
 }
 
- function CityBuilder() {
+function CityBuilder() {
   const [houses, setHouses] = useState<House[]>(() => {
     const savedHouses = localStorage.getItem("houses");
-    return savedHouses ? JSON.parse(savedHouses) : [{ houseName: "House 1", floors: 3, color: "#FFA500" }];
+    return savedHouses
+      ? JSON.parse(savedHouses)
+      : [{ houseName: "House 1", floors: 3, color: "#FFA500" }];
   });
-  const [location, setLocation] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
-
+  const [location, setLocation] = useState<{
+    latitude: number | null;
+    longitude: number | null;
+  }>({ latitude: null, longitude: null });
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -61,7 +74,10 @@ export default function App() {
   }, []);
 
   const { data, error, isLoading } = useQuery({
-    queryKey: location.latitude !== null && location.longitude !== null ? ["weather", location.latitude, location.longitude] : ["weather", 0, 0],
+    queryKey:
+      location.latitude !== null && location.longitude !== null
+        ? ["weather", location.latitude, location.longitude]
+        : ["weather", 0, 0],
     queryFn: fetchWeather,
     enabled: location.latitude !== null && location.longitude !== null,
   });
@@ -71,11 +87,17 @@ export default function App() {
   };
 
   const addNewHouse = () => {
-    const updatedHouses = [...houses, { houseName: `House ${houses.length + 1}`, floors: 3, color: "#FFA500" }];
+    const updatedHouses = [
+      ...houses,
+      { houseName: `House ${houses.length + 1}`, floors: 3, color: "#FFA500" },
+    ];
     setHouses(updatedHouses);
     saveToLocalStorage(updatedHouses);
-    setHouses([...houses, { houseName: `House ${houses.length + 1}`, floors: 3, color: "#FFA500" }]);  };
-  
+    setHouses([
+      ...houses,
+      { houseName: `House ${houses.length + 1}`, floors: 3, color: "#FFA500" },
+    ]);
+  };
 
   const removeHouse = (index: number) => {
     const updatedHouses = houses.filter((_, i) => i !== index);
@@ -84,36 +106,45 @@ export default function App() {
   };
 
   const updateFloors = (index: number, value: number) => {
-    const updatedHouses = houses.map((house, i) => i === index ? { ...house, floors: value } : house);
+    const updatedHouses = houses.map((house, i) =>
+      i === index ? { ...house, floors: value } : house
+    );
     setHouses(updatedHouses);
     saveToLocalStorage(updatedHouses);
   };
 
   const updateColor = (index: number, value: string) => {
-    const updatedHouses = houses.map((house, i) => i === index ? { ...house, color: value } : house);
+    const updatedHouses = houses.map((house, i) =>
+      i === index ? { ...house, color: value } : house
+    );
     setHouses(updatedHouses);
     saveToLocalStorage(updatedHouses);
   };
 
-  const updateHouseName = (index:number, value: string) => {
-    const updatedHouses = houses.map((house, i) => i === index ? { ...house, houseName: value } : house);
+  const updateHouseName = (index: number, value: string) => {
+    const updatedHouses = houses.map((house, i) =>
+      i === index ? { ...house, houseName: value } : house
+    );
     setHouses(updatedHouses);
     saveToLocalStorage(updatedHouses);
   };
 
-  console.log({data})
+  console.log({ data });
   return (
     <div className="min-h-screen">
       <header className="bg-gray-100 mb-5 shadow-md p-4 text-red-600 text-2xl font-bold">
         City Builder
-
         <div>
           {isLoading && <p>Loading weather...</p>}
           {error && <p>Error loading weather</p>}
           {data && (
             <div className="flex items-center gap-2">
               <span>{data.current_weather.temperature}°C</span>
-              {data.current_weather.weathercode < 3 ? "☀️" : data.current_weather.weathercode < 6 ? "🌧️" : "❄️"}
+              {data.current_weather.weathercode < 3
+                ? "☀️"
+                : data.current_weather.weathercode < 6
+                ? "🌧️"
+                : "❄️"}
             </div>
           )}
         </div>
@@ -173,6 +204,7 @@ export default function App() {
                 </button>
               </div>
             ))}
+
             <button
               className="w-full bg-blue-500 text-white p-2 rounded"
               onClick={addNewHouse}
@@ -182,14 +214,25 @@ export default function App() {
           </div>
         </aside>
 
-        <main className="flex-1 p-6 flex flex-wrap gap-8 justify-center">
+        <main className="flex-1 p-6 grid grid-cols-4 gap-10 justify-center auto-rows-min">
           {houses.map((house, index) => (
             <div key={index} className="flex flex-col items-center">
               <Roof />
-              {[...Array(house.floors - 1)].map((_, i) => (
-                <HouseFloor key={i} color={house.color} />
-              ))}
+              <AnimatePresence>
+                {[...Array(house.floors - 1)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <HouseFloor color={house.color} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
               <FirstFloor color={house.color} />
+
             </div>
           ))}
         </main>
