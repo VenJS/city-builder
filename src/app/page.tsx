@@ -5,6 +5,12 @@ import { Trash } from "lucide-react";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 
 
+interface House {
+  houseName: string;
+  floors: number;
+  color: string;
+} 
+
 const colorOptions = [
   { name: "Orange", value: "#FFA500" },
   { name: "Alizarin", value: "#E74C3C" },
@@ -33,9 +39,10 @@ export default function App() {
 }
 
  function CityBuilder() {
-  const [houses, setHouses] = useState([
-    { houseName: "House 1", floors: 3, color: "#FFA500" }
-  ]);
+  const [houses, setHouses] = useState<House[]>(() => {
+    const savedHouses = localStorage.getItem("houses");
+    return savedHouses ? JSON.parse(savedHouses) : [{ houseName: "House 1", floors: 3, color: "#FFA500" }];
+  });
   const [location, setLocation] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
 
 
@@ -59,34 +66,39 @@ export default function App() {
     enabled: location.latitude !== null && location.longitude !== null,
   });
 
-  const addNewHouse = () => {
-    setHouses([...houses, { houseName: `House ${houses.length + 1}`, floors: 3, color: "#FFA500" }]);
+  const saveToLocalStorage = (houses: House[]) => {
+    localStorage.setItem("houses", JSON.stringify(houses));
   };
+
+  const addNewHouse = () => {
+    const updatedHouses = [...houses, { houseName: `House ${houses.length + 1}`, floors: 3, color: "#FFA500" }];
+    setHouses(updatedHouses);
+    saveToLocalStorage(updatedHouses);
+    setHouses([...houses, { houseName: `House ${houses.length + 1}`, floors: 3, color: "#FFA500" }]);  };
   
 
   const removeHouse = (index: number) => {
-    setHouses(houses.filter((_, i) => i !== index));
+    const updatedHouses = houses.filter((_, i) => i !== index);
+    setHouses(updatedHouses);
+    saveToLocalStorage(updatedHouses);
   };
 
   const updateFloors = (index: number, value: number) => {
-    const updatedHouses = houses.map((house, i) =>
-      i === index ? { ...house, floors: value } : house
-    );
+    const updatedHouses = houses.map((house, i) => i === index ? { ...house, floors: value } : house);
     setHouses(updatedHouses);
+    saveToLocalStorage(updatedHouses);
   };
 
   const updateColor = (index: number, value: string) => {
-    const updatedHouses = houses.map((house, i) =>
-      i === index ? { ...house, color: value } : house
-    );
+    const updatedHouses = houses.map((house, i) => i === index ? { ...house, color: value } : house);
     setHouses(updatedHouses);
+    saveToLocalStorage(updatedHouses);
   };
 
   const updateHouseName = (index:number, value: string) => {
-    const updatedHouses = houses.map((house, i) =>
-      i === index ? { ...house, houseName: value } : house
-    );
+    const updatedHouses = houses.map((house, i) => i === index ? { ...house, houseName: value } : house);
     setHouses(updatedHouses);
+    saveToLocalStorage(updatedHouses);
   };
 
   console.log({data})
