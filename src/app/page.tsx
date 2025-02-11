@@ -8,6 +8,8 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 interface House {
   houseName: string;
@@ -41,9 +43,68 @@ const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <CityBuilder />
-    </QueryClientProvider>
+    <DndProvider backend={HTML5Backend}>
+      <QueryClientProvider client={queryClient}>
+        <CityBuilder />
+      </QueryClientProvider>
+    </DndProvider>
+  );
+}
+
+const ItemType = "HOUSE";
+
+interface DraggableHouseProps {
+  house: House;
+  index: number;
+  moveHouse: (fromIndex: number, toIndex: number) => void;
+}
+
+export function DraggableHouse({
+  house,
+  index,
+  moveHouse,
+}: DraggableHouseProps) {
+  const [, ref] = useDrag({
+    type: ItemType,
+    item: { index },
+  });
+
+  const [, drop] = useDrop({
+    accept: ItemType,
+    hover: (draggedItem: { index: number }) => {
+      if (draggedItem.index !== index) {
+        moveHouse(draggedItem.index, index);
+        draggedItem.index = index;
+      }
+    },
+  });
+
+  return (
+    <div
+      ref={(node) => {
+        if (node) {
+          drop(ref(node));
+        }
+      }}
+      key={index}
+      className="flex flex-col items-center"
+    >
+      <Roof />
+      <AnimatePresence>
+        {[...Array(house.floors - 1)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <HouseFloor color={house.color} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      <FirstFloor color={house.color} />
+    </div>
   );
 }
 
@@ -84,6 +145,16 @@ function CityBuilder() {
 
   const saveToLocalStorage = (houses: House[]) => {
     localStorage.setItem("houses", JSON.stringify(houses));
+  };
+
+  const moveHouse = (fromIndex: number, toIndex: number): void => {
+    setHouses((prevHouses) => {
+      const updatedHouses = [...prevHouses];
+      const [movedHouse] = updatedHouses.splice(fromIndex, 1);
+      updatedHouses.splice(toIndex, 0, movedHouse);
+      saveToLocalStorage(updatedHouses);
+      return updatedHouses;
+    });
   };
 
   const addNewHouse = () => {
@@ -216,24 +287,12 @@ function CityBuilder() {
 
         <main className="flex-1 p-6 grid grid-cols-4 gap-10 justify-center auto-rows-min">
           {houses.map((house, index) => (
-            <div key={index} className="flex flex-col items-center">
-              <Roof />
-              <AnimatePresence>
-                {[...Array(house.floors - 1)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <HouseFloor color={house.color} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              <FirstFloor color={house.color} />
-
-            </div>
+            <DraggableHouse
+              key={index}
+              house={house}
+              index={index}
+              moveHouse={moveHouse}
+            />
           ))}
         </main>
       </div>
