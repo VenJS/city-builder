@@ -27,3 +27,16 @@ export interface House {
     houses: House[];
     setHouses: React.Dispatch<React.SetStateAction<House[]>>;
   }
+
+  export interface HouseItemProps {
+    house: {
+      houseName: string;
+      floors: number;
+      color: string;
+    };
+    index: number;
+    updateHouseName: (index: number, value: string) => void;
+    updateFloors: (index: number, value: number) => void;
+    updateColor: (index: number, value: string) => void;
+    removeHouse: (index: number) => void;
+  }

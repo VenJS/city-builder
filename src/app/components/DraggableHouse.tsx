@@ -1,13 +1,22 @@
+/* eslint-disable react/display-name */
+
+
+import React from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { AnimatePresence, motion } from "framer-motion";
 import { FirstFloor, HouseFloor, Roof } from "../assets/assets";
 import { DraggableHouseProps } from "../types/interfaces";
 
-export function DraggableHouse({
-  house,
-  index,
-  moveHouse,
-}: DraggableHouseProps) {
+const arePropsEqual = (prevProps: DraggableHouseProps, nextProps: DraggableHouseProps) => {
+  return (
+    prevProps.house.houseName === nextProps.house.houseName &&
+    prevProps.house.floors === nextProps.house.floors &&
+    prevProps.house.color === nextProps.house.color &&
+    prevProps.index === nextProps.index
+  );
+};
+
+const DraggableHouse = React.memo(({ house, index, moveHouse }: DraggableHouseProps) => {
   const [, ref] = useDrag({
     type: "HOUSE",
     item: { index },
@@ -22,6 +31,10 @@ export function DraggableHouse({
       }
     },
   });
+
+ 
+
+  console.log('rendering DraggableHouse', index);
 
   return (
     <div
@@ -50,4 +63,6 @@ export function DraggableHouse({
       <FirstFloor color={house.color} />
     </div>
   );
-}
+}, arePropsEqual);
+
+export { DraggableHouse };

@@ -51,8 +51,6 @@ export function CityBuilder() {
     });
   };
 
-  console.log({ houses });
-  console.log({ data });
   return (
     <div className="min-h-screen">
       <Header isLoading={isLoading} error={error} data={data} />
